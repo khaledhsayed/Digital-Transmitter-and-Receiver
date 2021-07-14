@@ -1,0 +1,275 @@
+clear all
+clc
+close all
+%generating bits
+NoOfBits = 100000 ;
+bits = randi([0 1] , 1 , NoOfBits) ;
+% 1)BPSK Modulation scheme
+% Mapper
+mapped_BPSK = bits .*2 - 1 ;
+% AWGN channel
+Eb_No = [-5 : 10] ;
+No_BPSK = 1./(10.^(Eb_No/10));
+BER_BPSK = [] ;
+theoritical_BER_BPSK = [] ;
+for i = 1 : length(Eb_No)
+noise_BPSK = randn(1,NoOfBits)*sqrt(No_BPSK(i)/2);
+recieved_BPSK = mapped_BPSK + noise_BPSK ;
+% Demapper
+demapped_BPSK = [] ;
+for k = 1 : NoOfBits
+if recieved_BPSK(k) >= 0
+demapped_BPSK = [demapped_BPSK 1] ;
+else
+demapped_BPSK = [demapped_BPSK 0] ;
+end
+end
+%BER calculation
+error = abs(demapped_BPSK - bits);
+BER_BPSK = [BER_BPSK sum(error)/NoOfBits] ;
+theoritical_BER_BPSK = [theoritical_BER_BPSK
+0.5*erfc(sqrt(1/No_BPSK(i)))];
+end% plotting BER of BPSK
+figure(1)
+semilogy(Eb_No,BER_BPSK , '-o' ) ;
+hold on
+semilogy( Eb_No , theoritical_BER_BPSK ,'-*') ;
+xlabel('Eb/No');
+ylabel('BER');
+legend('tight upper bound of BER' , 'theoretical BER ') ;
+title('BPSK Modulation');
+% 2)QPSK Modulation scheme
+% Mapper
+mapped_QPSK = zeros(1 , NoOfBits/2) ;
+for i = 1 : NoOfBits/2
+if bits(2*i-1 : 2*i) == [0 0]
+mapped_QPSK(i) = -1 + j*-1 ;
+elseif bits(2*i-1 : 2*i) == [0 1]
+mapped_QPSK(i) = -1 + j*1 ;
+elseif bits(2*i-1 : 2*i) == [1 0]
+mapped_QPSK(i) = 1 + j*-1 ;
+else
+mapped_QPSK(i) = 1 + j*1 ;
+end
+end
+% AWGN channel
+No_QPSK = 1./(10.^(Eb_No/10));
+BER_QPSK = [] ;
+theoritical_BER_QPSK = [] ;
+for i = 1 : length(Eb_No)
+noise_QPSK = randn(1,NoOfBits/2)*sqrt(No_QPSK(i)/2) +
+j.*randn(1,NoOfBits/2)*sqrt(No_QPSK(i)/2);
+recieved_QPSK = mapped_QPSK + noise_QPSK ;
+% Demapper
+demapped_QPSK = [] ;for k = 1 : NoOfBits/2
+if real(recieved_QPSK(k)) >= 0
+demapped_QPSK = [demapped_QPSK 1] ;
+else
+demapped_QPSK = [demapped_QPSK 0] ;
+end
+if imag(recieved_QPSK(k)) >= 0
+demapped_QPSK = [demapped_QPSK 1] ;
+else
+demapped_QPSK = [demapped_QPSK 0] ;
+end
+end
+%BER calculation
+error = abs(demapped_QPSK - bits);
+BER_QPSK = [BER_QPSK sum(error)/NoOfBits] ;
+theoritical_BER_QPSK = [theoritical_BER_QPSK
+0.5*erfc(sqrt(1/No_QPSK(i)))];
+end
+% plotting BER of QPSK
+figure(2)
+semilogy(Eb_No,BER_QPSK , '-o' ) ;
+hold on
+semilogy( Eb_No , theoritical_BER_QPSK ,'-*') ;
+xlabel('Eb/No');
+ylabel('BER');
+legend('tight upper bound of BER' , 'theoretical BER ') ;
+title('QPSK Modulation');
+% 3)8PSK Modulation scheme
+% Mapper
+mapped_8PSK = zeros(1 , (NoOfBits-1)/3) ;
+for i = 1 : (NoOfBits-1)/3
+if bits(i*3-2 : i*3) ==[0 0 0]
+mapped_8PSK(i) = cos(0)+j*sin(0);
+elseif bits(i*3-2 : i*3) ==[0 0 1]mapped_8PSK(i) = cos(pi/4)+j*sin(pi/4);
+elseif bits(i*3-2 : i*3) ==[0 1 1]
+mapped_8PSK(i) = cos(pi/2)+j*sin(pi/2);
+elseif bits(i*3-2 : i*3) ==[0 1 0]
+mapped_8PSK(i) = cos(3*pi/4)+j*sin(3*pi/4);
+elseif bits(i*3-2 : i*3) ==[1 1 0]
+mapped_8PSK(i) = cos(pi)+j*sin(pi);
+elseif bits(i*3-2 : i*3) ==[1 1 1]
+mapped_8PSK(i) = cos(5*pi/4)+j*sin(5*pi/4);
+elseif bits(i*3-2 : i*3) ==[1 0 1]
+mapped_8PSK(i) = cos(3*pi/2)+j*sin(3*pi/2);
+elseif bits(i*3-2 : i*3) ==[1 0 0]
+mapped_8PSK(i) = cos(7*pi/4)+j*sin(7*pi/4);
+end
+end
+% AWGN channel
+No_8PSK = (1/3)./(10.^(Eb_No/10));
+BER_8PSK = [] ;
+theoritical_BER_8PSK = [] ;
+for i = 1 : length(Eb_No)
+noise_8PSK = randn(1,(NoOfBits-1)/3)*sqrt(No_8PSK(i)/2)
++ j.*randn(1,(NoOfBits-1)/3)*sqrt(No_8PSK(i)/2);
+recieved_8PSK = mapped_8PSK + noise_8PSK ;
+% Demapper
+demapped_8PSK = [] ;
+for k = 1 : (NoOfBits-1)/3
+if angle(recieved_8PSK(k)) >= -pi/8 &&
+angle(recieved_8PSK(k)) <= pi/8
+demapped_8PSK = [demapped_8PSK 0 0 0] ;
+elseif angle(recieved_8PSK(k)) >= pi/8 &&
+angle(recieved_8PSK(k)) <= 3*pi/8
+demapped_8PSK = [demapped_8PSK 0 0 1] ;
+elseif angle(recieved_8PSK(k)) >= 3*pi/8 &&
+angle(recieved_8PSK(k)) <= 5*pi/8
+demapped_8PSK = [demapped_8PSK 0 1 1] ;
+elseif angle(recieved_8PSK(k)) >= 5*pi/8 &&
+angle(recieved_8PSK(k)) <= 7*pi/8demapped_8PSK = [demapped_8PSK 0 1 0] ;
+elseif angle(recieved_8PSK(k)) >= -7*pi/8 &&
+angle(recieved_8PSK(k)) <= -5*pi/8
+demapped_8PSK = [demapped_8PSK 1 1 1] ;
+elseif angle(recieved_8PSK(k)) >= -5*pi/8 &&
+angle(recieved_8PSK(k)) <= -3*pi/8
+demapped_8PSK = [demapped_8PSK 1 0 1] ;
+elseif angle(recieved_8PSK(k)) >= -3*pi/8 &&
+angle(recieved_8PSK(k)) <= -pi/8
+demapped_8PSK = [demapped_8PSK 1 0 0] ;
+else
+demapped_8PSK = [demapped_8PSK 1 1 0] ;
+end
+end
+%BER calculation
+error = abs( demapped_8PSK - bits( 1 : (NoOfBits-1) ) );
+BER_8PSK = [BER_8PSK sum(error)/NoOfBits] ;
+theoritical_BER_8PSK = [theoritical_BER_8PSK (1/3)*erfc(
+sqrt(1/No_8PSK(i))*sin(pi/8) )];
+end
+% plotting BER of 8PSK
+figure(3)
+semilogy(Eb_No,BER_8PSK , '-o' ) ;
+hold on
+semilogy( Eb_No , theoritical_BER_8PSK ,'-*') ;
+xlabel('Eb/No');
+ylabel('BER');
+legend('tight upper bound of BER' , 'theoretical BER ') ;
+title('8PSK Modulation');
+% 4)16QAM Modulation scheme
+% Mapper
+mapped_16QAM = zeros(1 , NoOfBits/4) ;
+for i = 1 : NoOfBits/4
+if bits(4*i-3 : 4*i) == [0 0 0 0]mapped_16QAM(i) = -3 + j*-3 ;
+elseif bits(4*i-3 : 4*i) == [0 0 0 1]
+mapped_16QAM(i) = -3 + j*-1 ;
+elseif bits(4*i-3 : 4*i) == [0 0 1 0]
+mapped_16QAM(i) = -3 + j*3 ;
+elseif bits(4*i-3 : 4*i) == [0 0 1 1]
+mapped_16QAM(i) = -3 + j*1 ;
+elseif bits(4*i-3 : 4*i) == [0 1 0 0]
+mapped_16QAM(i) = -1 + j*-3 ;
+elseif bits(4*i-3 : 4*i) == [0 1 0 1]
+mapped_16QAM(i) = -1 + j*-1 ;
+elseif bits(4*i-3 : 4*i) == [0 1 1 0]
+mapped_16QAM(i) = -1 + j*3 ;
+elseif bits(4*i-3 : 4*i) == [0 1 1 1]
+mapped_16QAM(i) = -1 + j*1 ;
+elseif bits(4*i-3 : 4*i) == [1 0 0 0]
+mapped_16QAM(i) = 3 + j*-3 ;
+elseif bits(4*i-3 : 4*i) == [1 0 0 1]
+mapped_16QAM(i) = 3 + j*-1 ;
+elseif bits(4*i-3 : 4*i) == [1 0 1 0]
+mapped_16QAM(i) = 3 + j*3 ;
+elseif bits(4*i-3 : 4*i) == [1 0 1 1]
+mapped_16QAM(i) = 3 + j*1 ;
+elseif bits(4*i-3 : 4*i) == [1 1 0 0]
+mapped_16QAM(i) = 1 + j*-3 ;
+elseif bits(4*i-3 : 4*i) == [1 1 0 1]
+mapped_16QAM(i) = 1 + j*-1 ;
+elseif bits(4*i-3 : 4*i) == [1 1 1 0]
+mapped_16QAM(i) = 1 + j*3 ;
+elseif bits(4*i-3 : 4*i) == [1 1 1 1]
+mapped_16QAM(i) = 1 + j*1 ;
+end
+end
+% AWGN channel
+No_16QAM = 2.5./(10.^(Eb_No/10));
+BER_16QAM = [] ;
+theoritical_BER_16QAM = [] ;
+for i = 1 : length(Eb_No)noise_16QAM = randn(1,NoOfBits/4)*sqrt(No_16QAM(i)/2) +
+j.*randn(1,NoOfBits/4)*sqrt(No_16QAM(i)/2);
+recieved_16QAM = mapped_16QAM + noise_16QAM ;
+% Demapper
+demapped_16QAM = [] ;
+for k = 1 : NoOfBits/4
+distance1 = abs(recieved_16QAM(k) - ( -3 + j*-3 )) ;
+distance2 = abs(recieved_16QAM(k) - ( -3 + j*-1 )) ;
+distance3 = abs(recieved_16QAM(k) - ( -3 + j*3 )) ;
+distance4 = abs(recieved_16QAM(k) - ( -3 + j*1 )) ;
+distance5 = abs(recieved_16QAM(k) - ( -1 + j*-3 )) ;
+distance6 = abs(recieved_16QAM(k) - ( -1 + j*-1 )) ;
+distance7 = abs(recieved_16QAM(k) - ( -1 + j*3 )) ;
+distance8 = abs(recieved_16QAM(k) - ( -1 + j*1 )) ;
+distance9 = abs(recieved_16QAM(k) - ( 3 + j*-3 )) ;
+distance10 = abs(recieved_16QAM(k) - ( 3 + j*-1 )) ;
+distance11 = abs(recieved_16QAM(k) - ( 3 + j*3 )) ;
+distance12 = abs(recieved_16QAM(k) - ( 3 + j*1 )) ;
+distance13 = abs(recieved_16QAM(k) - ( 1 + j*-3 )) ;
+distance14 = abs(recieved_16QAM(k) - ( 1 + j*-1 )) ;
+distance15 = abs(recieved_16QAM(k) - ( 1 + j*3 )) ;
+distance16 = abs(recieved_16QAM(k) - ( 1 + j*1 )) ;
+distance = [distance1 distance2 distance3 distance4
+distance5 distance6 distance7 distance8 distance9 distance10
+distance11 distance12 distance13 distance14 distance15
+distance16];
+if min(distance) == distance1
+demapped_16QAM = [demapped_16QAM 0 0 0 0];
+elseif min(distance) == distance2
+demapped_16QAM = [demapped_16QAM 0 0 0 1];
+elseif min(distance) == distance3
+demapped_16QAM = [demapped_16QAM 0 0 1 0];
+elseif min(distance) == distance4
+demapped_16QAM = [demapped_16QAM 0 0 1 1];
+elseif min(distance) == distance5
+demapped_16QAM = [demapped_16QAM 0 1 0 0];
+elseif min(distance) == distance6demapped_16QAM = [demapped_16QAM 0 1 0 1];
+elseif min(distance) == distance7
+demapped_16QAM = [demapped_16QAM 0 1 1 0];
+elseif min(distance) == distance8
+demapped_16QAM = [demapped_16QAM 0 1 1 1];
+elseif min(distance) == distance9
+demapped_16QAM = [demapped_16QAM 1 0 0 0];
+elseif min(distance) == distance10
+demapped_16QAM = [demapped_16QAM 1 0 0 1];
+elseif min(distance) == distance11
+demapped_16QAM = [demapped_16QAM 1 0 1 0];
+elseif min(distance) == distance12
+demapped_16QAM = [demapped_16QAM 1 0 1 1];
+elseif min(distance) == distance13
+demapped_16QAM = [demapped_16QAM 1 1 0 0];
+elseif min(distance) == distance14
+demapped_16QAM = [demapped_16QAM 1 1 0 1];
+elseif min(distance) == distance15
+demapped_16QAM = [demapped_16QAM 1 1 1 0];
+elseif min(distance) == distance16
+demapped_16QAM = [demapped_16QAM 1 1 1 1];
+end
+end
+%BER calculation
+error = abs(demapped_16QAM - bits);
+BER_16QAM = [BER_16QAM sum(error)/NoOfBits] ;
+theoritical_BER_16QAM = [theoritical_BER_16QAM
+(1.5/4)*erfc(sqrt(1/No_16QAM(i)))];
+end
+% plotting BER of 8PSK
+figure(4)
+semilogy(Eb_No,BER_16QAM , '-o' ) ;
+hold on
+semilogy( Eb_No , theoritical_BER_16QAM ,'-*') ;
+xlabel('Eb/No');
+ylabel('BER');legend('tight upper bound of BER' , 'theoretical BER ') ;
+title('16QAM Modulation');
